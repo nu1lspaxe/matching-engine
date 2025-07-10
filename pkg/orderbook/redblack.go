@@ -3,6 +3,7 @@ package orderbook
 import (
 	"container/list"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/emirpasic/gods/v2/trees/redblacktree"
@@ -33,6 +34,7 @@ type Order struct {
 type OrderBook struct {
 	Bids *redblacktree.Tree[float64, *list.List] // Buy orders, descending order
 	Asks *redblacktree.Tree[float64, *list.List] // Sell orders, ascending order
+	sync.RWMutex
 }
 
 func NewOrderBook() *OrderBook {
@@ -61,7 +63,10 @@ func NewOrderBook() *OrderBook {
 	}
 }
 
-func (ob *OrderBook) Insert(order Order) {
+func (ob *OrderBook) InsertOrder(order Order) {
+	ob.Lock()
+	defer ob.Unlock()
+
 	tree := ob.Bids
 	if order.Side == Ask {
 		tree = ob.Asks
@@ -76,7 +81,10 @@ func (ob *OrderBook) Insert(order Order) {
 	queue.PushBack(order)
 }
 
-func (ob *OrderBook) Remove(side OrderSide, price float64, orderID string) bool {
+func (ob *OrderBook) RemoveOrder(side OrderSide, price float64, orderID string) bool {
+	ob.Lock()
+	defer ob.Unlock()
+
 	tree := ob.Bids
 	if side == Ask {
 		tree = ob.Asks
@@ -99,7 +107,10 @@ func (ob *OrderBook) Remove(side OrderSide, price float64, orderID string) bool 
 	return false
 }
 
-func (ob *OrderBook) Match() []string {
+func (ob *OrderBook) MatchOrders() []string {
+	ob.Lock()
+	defer ob.Unlock()
+
 	var tradeLogs []string
 
 	for !ob.Bids.Empty() && !ob.Asks.Empty() {
@@ -136,6 +147,9 @@ func (ob *OrderBook) Match() []string {
 }
 
 func (ob *OrderBook) GetBestBid() (float64, float64, bool) {
+	ob.RLock()
+	defer ob.RUnlock()
+
 	if ob.Bids.Empty() {
 		return 0, 0, false
 	}
@@ -152,6 +166,9 @@ func (ob *OrderBook) GetBestBid() (float64, float64, bool) {
 }
 
 func (ob *OrderBook) GetBestAsk() (float64, float64, bool) {
+	ob.RLock()
+	defer ob.RUnlock()
+
 	if ob.Asks.Empty() {
 		return 0, 0, false
 	}
