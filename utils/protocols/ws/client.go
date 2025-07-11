@@ -23,7 +23,7 @@ func (c *Client) Read() {
 		_, msg, err := c.conn.ReadMessage()
 		if err != nil {
 			c.conn.WriteMessage(websocket.CloseMessage, []byte(
-				NewError(ErrReadMsg, err.Error()).Error(),
+				NewError(ErrReadMessage, err.Error()).Error(),
 			))
 			return
 		}
@@ -44,7 +44,7 @@ func (c *Client) Write() {
 		}
 		if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
 			c.conn.WriteMessage(websocket.CloseMessage, []byte(
-				NewError(ErrWriteMsg, err.Error()).Error(),
+				NewError(ErrWriteMessage, err.Error()).Error(),
 			))
 			return
 		}

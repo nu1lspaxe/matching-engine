@@ -7,8 +7,8 @@ const prefix = "ws:"
 type ErrCode int
 
 const (
-	ErrWriteMsg ErrCode = iota
-	ErrReadMsg
+	ErrWriteMessage ErrCode = iota
+	ErrReadMessage
 )
 
 type wsError struct {
